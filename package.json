@@ -1,0 +1,52 @@
+{
+  "name": "@anbrusi/ckeditor5-ispencil",
+  "version": "0.0.1",
+  "description": "A plugin for CKEditor 5.",
+  "keywords": [
+    "ckeditor",
+    "ckeditor5",
+    "ckeditor 5",
+    "ckeditor5-feature",
+    "ckeditor5-plugin"
+  ],
+  "main": "src/ispencil.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anbrusi/ispencil2"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=5.7.1"
+  },
+  "files": [
+    "lang",
+    "src/*",
+    "theme/*",
+    "build",
+    "sample/*",
+    "ckeditor5-metadata.json"
+  ],
+  "dependencies": {
+    "ckeditor5": ">=39.0.2"
+  },
+  "devDependencies": {
+    "@ckeditor/ckeditor5-basic-styles": "^39.0.2",
+    "@ckeditor/ckeditor5-dev-utils": "^39.1.0",
+    "@ckeditor/ckeditor5-editor-classic": "^39.0.2",
+    "@ckeditor/ckeditor5-essentials": "^39.0.2",
+    "@ckeditor/ckeditor5-heading": "^39.0.2",
+    "@ckeditor/ckeditor5-list": "^39.0.2",
+    "@ckeditor/ckeditor5-paragraph": "^39.0.2",
+    "@ckeditor/ckeditor5-theme-lark": "^39.0.2",
+    "css-loader": "^5.2.7",
+    "postcss-loader": "^4.3.0",
+    "raw-loader": "^4.0.2",
+    "style-loader": "^2.0.0",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^4.10.0"
+  },
+  "scripts": {
+    "build": "webpack --mode production"
+  }
+}
