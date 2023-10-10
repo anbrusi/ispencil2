@@ -48,6 +48,7 @@ class dispatcher {
         $html .= '<link rel="stylesheet" href="index.css" />';
         // Import the classic editor script for all pages. Instantiation is made in pages, that need it
         $html .= '<script src="'.self::CLASSICEDITOR.'"></script>';
+        $html .= '<script src="../node_modules/@ckeditor/ckeditor5-inspector/build/inspector.js"></script>';
         $html .= '</head>';
         return $html;
     }
@@ -136,10 +137,17 @@ class dispatcher {
         $txt .= <<<'EOD'
         ClassicEditor
             .create( document.querySelector( '#editor' ), {
-               
+                // Configuration details.
+                isPencil: {
+                    width: 800,
+                    height: 200,
+                    hasBorder: true,
+                    position: "center"
+                }
             } )
             .then( editor => {
                 console.log('editor ready', editor); 
+                CKEditorInspector.attach( editor );
             } )
             .catch( error => {
                 console.error( error );

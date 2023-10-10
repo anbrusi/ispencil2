@@ -44,6 +44,8 @@ export default class IsResizing extends Plugin {
          */
         this.lastSelectedModelElement = null;
 
+        this._observer = new (DomEmitterMixin())();
+
         // Resizer dimensions and visibility must be set in a selection handler and not as a reaction
         // to canvas mouse clicks, because a click on a positioning handle would not handle the resizer
         this.editor.editing.downcastDispatcher.on( 'selection', (evt, data) => {
@@ -69,35 +71,154 @@ export default class IsResizing extends Plugin {
                 }
             }
         } );
-        this.editor.ui.on( 'update', () => {
-            // console.log( 'editor.ui update fired' )
-        } );
 
-        this.listenTo( this.editor.editing.view.document, 'mousedown', this._mouseDownListener.bind( this ), { priority: 'high' } );
-        this._observer = new (DomEmitterMixin())();
-        this._observer.listenTo(domDocument, 'mousemove', this._mouseMoveListener.bind(this));
-        this._observer.listenTo(domDocument, 'mouseup', this._mouseUpListener.bind(this));
+
+        this._boundPointerdownHL = this._pointerdownHL.bind( this );
+        this._boundPointermoveHL = this._pointermoveHL.bind( this );
+        this._boundPointerupHL = this._pointerupHL.bind( this );
+
+        /*
+        this.editor.editing.view.on( 'render', () => { 
+            const selectedViewElement = this.editor.editing.mapper.toViewElement( this._selectedModelElement);
+            if ( selectedViewElement ) {
+               this._attachHandleListeners( selectedViewElement );
+            }
+        } );
+        */
+
+
+        // The following worked with mouse, but not with pointer. Even changing only mousedown to pointerdown caused dragging of the whole widget
+        /*
+        this.listenTo( this.editor.editing.view.document, 'mousedown', this._pointerDownListener.bind( this ), { priority: 'high' } );
+        this._observer.listenTo(domDocument, 'mousemove', this._pointerMoveListener.bind(this));
+        this._observer.listenTo(domDocument, 'mouseup', this._pointerUpListener.bind(this));
+        */
+
     }
 
+    _pointerdownHL( domEvent ) {
+        console.log( 'POINTERDOWN IsResizing pointerdown on handle event', domEvent );
+        domEvent.preventDefault();
+
+        // This is vital. Capturing the pointer retargets all future pointer events to handle until pointerup.
+        // Without this measure, we would have to listen on document for pointermove,
+        // but this could interfere with other move handlers, obliging us to add and remove handlers
+        // See Ilya Kantor p. 189
+        const handle = domEvent.target;
+        handle.setPointerCapture( domEvent.pointerId );
+
+        this._activeResizer = true;
+        this._handlePosition = handlePosition( handle );
+        this._originalCoordinates = extractCoordinates(domEvent);
+        this._originalResizerSize = this._getResizerSize();
+
+        console.log( 'original coordinates', this._originalCoordinates );
+        const position = this._selectedModelElement.getAttribute( 'position');
+        console.log( 'poition', position );
+    }
+
+    _pointermoveHL( domEvent ) {
+        // console.log( 'POINTERMOVE IsResizing pointerdown on handle event', evt );
+        if ( this._activeResizer && this._selectedModelElement ) {
+            domEvent.preventDefault();
+            const position = this._selectedModelElement.getAttribute( 'position');
+            const selectedWidgetElement = this.editor.editing.mapper.toViewElement( this._selectedModelElement );
+            const resizerViewElement = this.getChildByClass( selectedWidgetElement, 'ck-widget__resizer' );
+            const newCoordinates = extractCoordinates(domEvent);
+            this._proposedSize = this._proposeNewSize( position,  newCoordinates );
+            console.log( 'proposedSize', this._proposedSize );
+            this.editor.editing.view.change( (writer) => {
+                writer.setStyle( {
+                    width: this._proposedSize.width + 'px',
+                    height: this._proposedSize.height + 'px'
+                },  selectedWidgetElement );
+                writer.setStyle( {
+                    width: this._proposedSize.width + 'px',
+                    height: this._proposedSize.height + 'px'
+                },  resizerViewElement )
+            } );
+        }
+    }
+
+    _pointerupHL( domEvent ) {
+        console.log( 'POINTERUP IsResizing pointerup on handle event', domEvent );
+        domEvent.preventDefault();
+        if ( this._activeResizer ) {
+            // console.log ( 'new size on mouseup', this._proposedSize );
+            this._activeResizer = false;
+            const canvasModelElement = this._selectedModelElement.getChild(0);
+            this.editor.model.change( writer => {
+                writer.setAttributes({
+                    height: this._proposedSize.height,
+                    width: this._proposedSize.width
+                }, canvasModelElement );
+            } );
+        }
+    }
+
+    _attachHandleListeners( widgetViewElement ) {
+        // console.log( 'IsResizing editingView rendering selected view element', widgetViewElement );
+        const children = widgetViewElement.getChildren();
+        for ( let child of children ) {
+            if (child.hasClass( 'ck-widget__resizer') ) {
+                console.log( 'resizer', child );
+                const domResizerElement = this.editor.editing.view.domConverter.mapViewToDom( child );
+                console.log( 'domResizerElement', domResizerElement );
+                if ( domResizerElement ) {
+                    const resizerChildren = domResizerElement.children; // a HTML collection
+                    for ( let child of resizerChildren ) {
+                        if ( child.classList.contains( 'ck-widget__resizer__handle' ) ) {
+                            // console.log( 'resizer__handle', child );
+
+                            child.addEventListener( 'pointerdown', this._boundPointerdownHL );
+                            child.addEventListener( 'pointermove', this._boundPointermoveHL );
+                            child.addEventListener( 'pointerup', this._boundPointerupHL );
+
+                            /*
+                            this._observer.listenTo( child, 'pointerdown', this._boundPointerdownHL );
+                            this._observer.listenTo( child, 'pointermove', this._boundPointermoveHL );
+                            this._observer.listenTo( child, 'pointerup', this._boundPointerupHL );
+                            */
+
+                            // If contextmenu is not disabled and the pointer is hovered over the handle in isPad, the context menu is opened.
+                            // On Mac the context menu would be opened, by right clicking on the handle, but this is disabled as well
+                            child.addEventListener( 'contextmenu', e => e.preventDefault() );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Called in IsPencilEditing to greate the resizer div and the resizer handles.
+     * The resultin resizerViewElement is hot yet available at the end of this method, but only at editing downcast completion
+     * 
+     * @param {*} viewWriter 
+     * @param {string} position IsPencil position of the widget. One of 'left', 'cente', 'right'
+     * @returns 
+     */
     createResizer( viewWriter, position ) {
         const resizerViewElement = viewWriter.createUIElement('div', {
             class: 'ck ck-reset_all ck-widget__resizer'
         }, function (domDocument) {
-            const domElement = this.toDomElement(domDocument);
+            const domElement = this.toDomElement(domDocument); // Creates DOM element based on this view UIElement
             // domElement is the just created resizer div in the dom
             console.log( 'custom render function domElement', domElement );
             let rightHandle = new Template( {
                 tag: 'div',
                 attributes: {
                     class: 'ck-widget__resizer__handle ck-widget__resizer__handle-bottom-right'
-                }
+                }                
             } ).render();
+            rightHandle.style['touch-action'] = 'none';
             let leftHandle = new Template( {
                 tag: 'div',
                 attributes: {
                     class: 'ck-widget__resizer__handle ck-widget__resizer__handle-bottom-left'
                 }
             } ).render();
+            leftHandle.style['touch-action'] = 'none';
             switch ( position ) {
                 case 'left':
                     domElement.appendChild( rightHandle );
@@ -160,13 +281,18 @@ export default class IsResizing extends Plugin {
      * @param {@ckeditor/ckeditor5-engine/src/model/element} widgetModelElement 
      */
     showResizer( widgetModelElement ) {
-        const widgetViewElement = this.editor.editing.mapper.toViewElement( widgetModelElement )
-        const resizerViewElement = this.getChildByClass( widgetViewElement, 'ck-widget__resizer' );
-        console.log( 'IsResizing#showResizer resizerViewElement', resizerViewElement );
-        if ( resizerViewElement ) {
-            this.editor.editing.view.change( viewWriter => {
-                viewWriter.setStyle( 'display', 'block', resizerViewElement );
-            } );
+        const widgetViewElement = this.editor.editing.mapper.toViewElement( widgetModelElement );
+        if ( widgetViewElement ) {
+            const resizerViewElement = this.getChildByClass( widgetViewElement, 'ck-widget__resizer' );
+            // console.log( 'IsResizing#showResizer resizerViewElement', resizerViewElement );
+            if ( resizerViewElement && resizerViewElement.getStyle( 'display ') != 'block' ) {
+                const displayStyle = resizerViewElement.getStyle( 'display ');
+                console.log( 'displayStyle', displayStyle );
+                this.editor.editing.view.change( viewWriter => {
+                    viewWriter.setStyle( 'display', 'block', resizerViewElement );
+                    this._attachHandleListeners( widgetViewElement );
+                } );
+            }
         }
         this.lastSelectedModelElement = widgetModelElement;
     }
@@ -213,12 +339,13 @@ export default class IsResizing extends Plugin {
      * @param {*} event 
      * @param {*} domEventData 
      */
-    _mouseDownListener( event, domEventData ) {
+    /*
+    _pointerDownListener( event, domEventData ) {
         const domTarget = domEventData.domTarget;
         // console.log( 'isresizing mouse down on target', domTarget );
         if ( isResizerHandle( domTarget ) ) {
             // console.log( 'clicked handle' );
-            event.stop();
+            event.stop(); // Stops the event emitter to call further callbacks for this event interaction.
             domEventData.preventDefault();
             this._activeResizer = true;
             this._handlePosition = handlePosition( domTarget );
@@ -226,8 +353,10 @@ export default class IsResizing extends Plugin {
             this._originalResizerSize = this._getResizerSize();
         }
     }
+    */
 
-    _mouseUpListener( event, domEventData ) {
+    /*
+    _pointerUpListener( event, domEventData ) {
         if ( this._activeResizer ) {
             // console.log ( 'new size on mouseup', this._proposedSize );
             this._activeResizer = false;
@@ -240,6 +369,7 @@ export default class IsResizing extends Plugin {
             } );
         }
     }
+    */
 
     /**
      * Callback to a DomEmitterMixin
@@ -247,8 +377,10 @@ export default class IsResizing extends Plugin {
      * @param {*} event 
      * @param {*} domEventData 
      */
-    _mouseMoveListener( event, domEventData ) {
+    /*
+    _pointerMoveListener( event, domEventData ) {
         if ( this._activeResizer && this._selectedModelElement ) {
+            domEventData.preventDefault();
             const position = this._selectedModelElement.getAttribute( 'position ')
             const selectedWidgetElement = this.editor.editing.mapper.toViewElement( this._selectedModelElement );
             const resizerViewElement = this.getChildByClass( selectedWidgetElement, 'ck-widget__resizer' );
@@ -267,6 +399,7 @@ export default class IsResizing extends Plugin {
             } );
         }
     }
+    */
 
    _getResizerSize ( ) {
         const selectedViewElement = this.editor.editing.mapper.toViewElement( this._selectedModelElement )

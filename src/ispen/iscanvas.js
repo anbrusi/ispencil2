@@ -53,8 +53,10 @@ export default class IsCanvas extends Plugin {
         */
 
         this._observer.listenTo( domDocument, 'pointerdown', this._pointerdownListener.bind( this ) );
+        /*
         this._observer.listenTo( domDocument, 'pointermove', this._pointermoveListener.bind( this ) );
         this._observer.listenTo( domDocument, 'pointerup', this._pointerupListener.bind( this ) );
+        */
 
         this.isPencilEditing = this.editor.plugins.get( IsPencilEditing );
 
@@ -67,6 +69,10 @@ export default class IsCanvas extends Plugin {
         this._pointerDownH = this._freePenPointerDownH;
         this._pointerMoveH = this._freePenPointerMoveH;
         this._pointerUpH = this._freePenPointerUpH;
+
+        this._pointerdownHL = this._freePenPointerdownHL;
+        this._pointermoveHL = this._freePenPointermoveHL;
+        this._pointerupHL = this._freePenPointerupHL;
          
         // The following are initial values, current values are set 
         this.mode = 'freePen'
@@ -78,6 +84,27 @@ export default class IsCanvas extends Plugin {
 
         const options = {};
         this.isPenEngine = new IsPenEngine( options );
+    }
+
+    _modelToView( modelElement ) {
+        if ( modelElement ) {
+            return this.editor.editing.mapper.toViewElement( modelElement );
+        } else {
+            return undefined;
+        }
+    }
+
+    _viewToDom( viewElement ) {
+        if ( viewElement ) {
+            return this.editor.editing.view.domConverter.viewToDom( viewElement );
+        } else {
+            return undefined;
+        }
+    }
+
+    _modelToDom( modelElement ) {
+        const viewElement = this._modelToView( modelElement );
+        return this._viewToDom( viewElement );
     }
 
     _currentCanvasDomElement() {
@@ -252,12 +279,16 @@ export default class IsCanvas extends Plugin {
                 // Check if it is the current canvas
                 if ( this._currentCanvasModelElement && 
                     canvasModelElement.getAttribute( 'uid') == this._currentCanvasModelElement.getAttribute( 'uid') ) {
-                    // Pointer down on current canvasthis.
+                    // Pointer down on current canvas.
+                    // ===============================
                     // Possibly the resizer has been hidden by clicking outside of the editor
                     this.isPencilEditing.isResizing.showResizer( canvasModelElement.parent );
-                    this._pointerDownH(event, domEventData);
+
+                    // this._pointerDownH(event, domEventData);
+                    // this._freePenPointerdownHL( domEventData );
                 } else {
                     // Pointer down on a canvas, which is not current.
+                    // ===============================================
                     // this._setCanvasListeners( canvasModelElement );
                     if ( this._currentCanvasModelElement ) {
                         // There was a previously open canvas
@@ -265,10 +296,15 @@ export default class IsCanvas extends Plugin {
                     }
                     this.isPenEngine.loadFromCanvas( srcElement );
                     this._currentCanvasModelElement = canvasModelElement;
-                    this._pointerDownH(event, domEventData);
+
+                    // this._pointerDownH(event, domEventData);
+                    this._attachCanvasListeners( this._currentCanvasModelElement );
+                    console.log( 'calling canva pointerdown from document pointerdown' );
+                    this._freePenPointerdownHL( domEventData );
                 }
             } else {
                 // pointer down outside of canvas
+                // ==============================
                 console.log( 'IsCanvas#_pointerdownListener source element', srcElement );
                 if ( this._currentCanvasModelElement ) {
                     // There was a previously open canvas
@@ -277,6 +313,8 @@ export default class IsCanvas extends Plugin {
                 }
             }
         } else {
+            // pointer down outside the editor
+            // ===============================
             console.log( 'isCanvas#pointerdownListener source NOT in editor ', srcElement );
             // Hiding of the resizer is usually done in IsResizing on selection handler,
             // when the selection shifts away from the currently selected widget.
@@ -293,7 +331,64 @@ export default class IsCanvas extends Plugin {
 
     }
 
+    _freePenPointerdownHL( evt ) {
+        console.log( 'pointerdown fired on canvas' );
+        evt.preventDefault();     
+        if (this._allowedPointer(evt) && !this.pointerDown) {
+            const canvasDomElement = this._currentCanvasDomElement();
+            this.pointerDown = true;
+            if (evt.pointerType == 'mouse') {
+                canvasDomElement.style.cursor = 'crosshair';
+            } else {
+                canvasDomElement.style.cursor = 'none';
+            }
+
+            const width = _lineWidthFromStroke( this.stroke );  
+            const startPos = this._domPos( canvasDomElement, evt );  
+            this.isPenEngine.startPath( canvasDomElement, startPos, width, this.color, 'C' );
+        }
+        evt.stopPropagation();
+    }
+
+    _freePenPointermoveHL( evt ) {
+        console.log( 'pointermove fired on canvas', evt.pointerType );
+        evt.preventDefault();
+        if (this._allowedPointer(evt) && this.pointerDown) {
+            const canvasDomElement = this._currentCanvasDomElement();
+            const point = this._domPos(canvasDomElement, evt );
+            this.isPenEngine.moveTo( point );
+        }
+    }
+
+    _freePenPointerupHL( evt ) {
+        console.log( 'pointerup fired on canvas' );
+        evt.preventDefault();   
+        if (this._allowedPointer(evt) && this.pointerDown) {
+            const canvasDomElement = this._currentCanvasDomElement();
+            this.pointerDown = false;
+            if (evt.pointerType == 'mouse') {
+                canvasDomElement.style.cursor = 'default';
+            } else {
+                canvasDomElement.style.cursor = 'none';
+            }
+            const lastPoint = this._domPos( canvasDomElement, evt );
+            this.isPenEngine.terminatePath( lastPoint );
+        }
+    }
+
+    _attachCanvasListeners( canvasModelElement ) {
+        const canvas = this._modelToDom( canvasModelElement );
+        canvas.addEventListener( 'pointerdown', this._pointerdownHL.bind( this ) );
+        canvas.addEventListener( 'pointermove', this._pointermoveHL.bind( this ) );
+        canvas.addEventListener( 'pointerup', this._pointerupHL.bind( this ) );
+        
+        // If contextmenu is not disabled and the pointer is hovered over the handle in isPad, the context menu is opened.
+        // On Mac the context menu would be opened, by right clicking on the handle, but this is disabled as well
+        canvas.addEventListener( 'contextmenu', e => e.preventDefault() );
+    }
+
     /**
+     * Checks if the dom element src is inside CKEditor (inside means editable area AND editor toolbar)
      * 
      * @param {dom element} src 
      */
@@ -521,6 +616,7 @@ export default class IsCanvas extends Plugin {
      */
     _allowedPointer(event) {
         return event.pointerType == 'mouse' || event.pointerType == 'pen';
+        // return true;
     }
     
     /**

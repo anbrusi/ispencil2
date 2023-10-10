@@ -28,6 +28,7 @@
     "ckeditor5-metadata.json"
   ],
   "dependencies": {
+    "@ckeditor/ckeditor5-inspector": "^4.1.0",
     "ckeditor5": ">=39.0.2"
   },
   "devDependencies": {
