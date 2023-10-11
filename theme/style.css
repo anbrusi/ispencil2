@@ -1,0 +1,23 @@
+
+.ispcl-fitcontent {
+    width: fit-content;
+    height: fit-content;
+}
+.ispcl-thinborder {
+    border: 1px solid black;
+}
+.ispcl-leftpos {
+    float: left;
+    margin-right: 10px;
+}
+.ispcl-centerpos {
+    margin: 0 auto;
+    clear: both;
+}
+.ispcl-rightpos {
+    float: right;
+    margin-left: 10px;
+}
+.ispcl-canvas {
+    touch-action: none;
+}

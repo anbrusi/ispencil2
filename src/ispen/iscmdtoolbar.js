@@ -37,19 +37,4 @@ export default class IsCmdToolbar extends ToolbarView {
         console.log('IsCmdToolbar#buttonExecute customid', customid );
         this.set( 'activeCustomid', customid );
     }
-    /*
-    activeCustomidHandler(evt) {
-        // Not only button can become a focused element. Buttons are filtered out using the customid
-        const focusedItem = this.focusTracker.focusedElement;
-        // console.log('focused item', focusedItem);
-        if (focusedItem?.attributes) {
-            // Tis is a named node map
-            const customid = focusedItem.attributes.getNamedItem('data-ispcl-customid');
-            if (customid?.nodeValue) {
-                this.set('activeCustomid', customid.nodeValue);
-                // console.log('IsCmdToolbar.activeCustomid changed to', customid.nodeValue);
-            }
-        }
-    }
-    */
 }

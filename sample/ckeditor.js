@@ -6,7 +6,6 @@ import { Essentials } from '@ckeditor/ckeditor5-essentials';
 import { Heading } from '@ckeditor/ckeditor5-heading';
 import { List } from '@ckeditor/ckeditor5-list';
 import { Paragraph } from '@ckeditor/ckeditor5-paragraph';
-import { SimpleUploadAdapter } from '@ckeditor/ckeditor5-upload';
 import IsPencil from '../src/ispencil';
 
 
@@ -19,7 +18,6 @@ ClassicEditor.builtinPlugins = [
     Heading,
     List,
     Paragraph,
-    SimpleUploadAdapter,
     IsPencil
 ];
 
@@ -37,9 +35,6 @@ ClassicEditor.defaultConfig = {
             'isPencil'
         ]
     },
-    simpleUpload: {
-		uploadUrl: './isUpload.php'
-	},
 	// This is the default. It is overridden in PHP by the configuration in ClassicEditor.create
 	isPencil: {
 		width: 400,

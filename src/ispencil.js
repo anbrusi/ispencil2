@@ -5,6 +5,7 @@ import IsPencilEditing from './ispencilediting';
 import IsPencilToolbar from './ispenciltoolbar';
 import IsPencilUI from './ispencilui';
 import IsCanvas from './ispen/iscanvas';
+import '../theme/style.css';
 
 export default class IsPencil extends Plugin {
 
