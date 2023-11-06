@@ -49,8 +49,8 @@ export default class IsResizing extends Plugin {
         // Resizer dimensions and visibility must be set in a selection handler and not as a reaction
         // to canvas mouse clicks, because a click on a positioning handle would not handle the resizer
         this.editor.editing.downcastDispatcher.on( 'selection', (evt, data) => {
-            console.log( 'IsResizing#onSelectionHandler event', evt );
-            console.log( 'IsResizing#onSelectionHandler data', data );
+            // console.log( 'IsResizing#onSelectionHandler event', evt );
+            // console.log( 'IsResizing#onSelectionHandler data', data );
             const selectedModelElement = data.selection.getSelectedElement();
             if ( selectedModelElement?.name == 'isPencil' ) {
                 if ( this._selectedModelElement ) {
@@ -59,14 +59,14 @@ export default class IsResizing extends Plugin {
                     this.hideResizer( this._selectedModelElement);
                 }
                 // A new model element is selected. Sync and show the resizer
-                console.log( 'IsResizing#selectionHandler (widget selected) sync and show resizer in selected model element', selectedModelElement );
+                // console.log( 'IsResizing#selectionHandler (widget selected) sync and show resizer in selected model element', selectedModelElement );
                 this.syncResizerDim( selectedModelElement );
                 this.showResizer( selectedModelElement);
                 this._selectedModelElement = selectedModelElement;
             } else {
                 // Deselect only
                 if ( this._selectedModelElement ) {
-                    console.log( 'IsResizing#selectionHandler (no widget selected) hide old resizer in model element', this._selectedModelElement );
+                    // console.log( 'IsResizing#selectionHandler (no widget selected) hide old resizer in model element', this._selectedModelElement );
                     this.hideResizer( this._selectedModelElement );
                 }
             }

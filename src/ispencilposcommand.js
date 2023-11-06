@@ -20,7 +20,7 @@ export default class IsPencilPosCommand extends Command {
      * @param {string} position
      */
     execute( position ) {
-        console.log( 'ispencilposcommend#execute position', position );
+        // console.log( 'ispencilposcommend#execute position', position );
         // If the position changes, the model is downcated again, so it must be kept up to date
         const selectedModelElement = this.isCanvas.selectedWidgetModelElement();
         if ( selectedModelElement ) {
@@ -37,7 +37,7 @@ export default class IsPencilPosCommand extends Command {
     }
 
     refresh() {     
-        console.log( 'IsPencilPosCommand#refresh' );
+        // console.log( 'IsPencilPosCommand#refresh' );
         const selection = this.editor.model.document.selection;
         const selectedModelElement = selection.getSelectedElement();
         this.isEnabled = !!selectedModelElement;

@@ -222,7 +222,7 @@ export default class IsCanvas extends Plugin {
      * @param {native dom event} domEventData 
      */
     _pointerdownListener(event, domEventData) {
-        console.log( 'pointer down ');
+        // console.log( 'pointer down ');
         // Usde for focusing and unfocusing the widget
         const view = this.editor.editing.view;
         const viewDocument = view.document;
@@ -273,13 +273,13 @@ export default class IsCanvas extends Plugin {
 
                     // this._pointerDownH(event, domEventData);
                     this._attachCanvasListeners( this._currentCanvasModelElement );
-                    console.log( 'calling canva pointerdown from document pointerdown' );
+                    // console.log( 'calling canva pointerdown from document pointerdown' );
                     this._pointerdownHL( domEventData );
                 }
             } else {
                 // pointer down outside of canvas
                 // ==============================
-                console.log( 'IsCanvas#_pointerdownListener source element', srcElement );
+                // console.log( 'IsCanvas#_pointerdownListener source element', srcElement );
                 if ( this._currentCanvasModelElement ) {
                     // There was a previously open canvas
                     this.closeCanvas( this._currentCanvasModelElement );
@@ -329,7 +329,7 @@ export default class IsCanvas extends Plugin {
     }
 
     _freePenPointerdownM( evt ) {
-        console.log( 'free pen pointerdown fired on canvas' );
+        // console.log( 'free pen pointerdown fired on canvas' );
         evt.preventDefault();     
         if (this._allowedPointer(evt) && !this.pointerDown) {
             const canvasDomElement = this._currentCanvasDomElement();
@@ -348,7 +348,7 @@ export default class IsCanvas extends Plugin {
     }
 
     _freePenPointermoveM( evt ) {
-        console.log( 'pointermove fired on canvas', evt.pointerType );
+        // console.log( 'pointermove fired on canvas', evt.pointerType );
         evt.preventDefault();
         if (this._allowedPointer(evt) && this.pointerDown) {
             const canvasDomElement = this._currentCanvasDomElement();
@@ -358,7 +358,7 @@ export default class IsCanvas extends Plugin {
     }
 
     _freePenPointerupM( evt ) {
-        console.log( 'pointerup fired on canvas' );
+        // console.log( 'pointerup fired on canvas' );
         evt.preventDefault();   
         if (this._allowedPointer(evt) && this.pointerDown) {
             const canvasDomElement = this._currentCanvasDomElement();
@@ -374,7 +374,7 @@ export default class IsCanvas extends Plugin {
     }
 
     _straightLinesPointerdownM( evt ) {  
-        console.log( 'straight lines pointerdown fired on canvas' );
+        // console.log( 'straight lines pointerdown fired on canvas' );
         if (this._allowedPointer(evt) && !this.pointerDown) {
             const canvasDomElement = this._currentCanvasDomElement();
             this.pointerDown = true;
@@ -417,7 +417,7 @@ export default class IsCanvas extends Plugin {
 
 
     _erasePointerDownM( evt ){
-        console.log('erasePointerDown');
+        // console.log('erasePointerDown');
         if (this._allowedPointer(evt) && !this.pointerDown) {
             const canvasDomElement = this._currentCanvasDomElement();
             this.pointerDown = true;

@@ -32,9 +32,9 @@ export default class IsCmdToolbar extends ToolbarView {
     }
 
     _buttonExecute( evt ) {
-        console.log('IsCmdToolbar#buttonExecute event', evt );
+        // console.log('IsCmdToolbar#buttonExecute event', evt );
         const customid = evt.source.customid;
-        console.log('IsCmdToolbar#buttonExecute customid', customid );
+        // console.log('IsCmdToolbar#buttonExecute customid', customid );
         this.set( 'activeCustomid', customid );
     }
 }

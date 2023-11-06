@@ -17,7 +17,7 @@ export default class IsPencilUI extends Plugin {
 	}
     
     init() {
-        console.log( 'IsPencilUI#init() got called' );
+        // console.log( 'IsPencilUI#init() got called' );
         
         const editor = this.editor;
         const t = editor.t;

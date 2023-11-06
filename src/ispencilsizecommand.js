@@ -14,7 +14,7 @@ export default class IsPencilSizeCommand extends Command {
      * @param {object} size an object with properties width and height
      */
     execute( size ) {
-        console.log( 'Executing IsPencilSizeCommand with size', size );
+        // console.log( 'Executing IsPencilSizeCommand with size', size );
         const model = this.editor.model;  
         const selection = model.document.selection;
         const widgetModelElement = selection.getSelectedElement();

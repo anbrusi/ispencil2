@@ -60,7 +60,7 @@ export function attachIsPencil( jsonparams ) {
     // console.log( 'IspenEngine#attachIspencil oldCandidates', oldCandidates );
     if ( candidates || oldCandidates ) {
         const options = JSON.parse( jsonparams );
-        console.log( 'IsPenEngine options', options);
+        // console.log( 'IsPenEngine options', options);
         const isPenEngine = new IsPenEngine( options );
         for ( let candidate of candidates ) {
             // console.log( 'rendering candidate', candidate);
@@ -288,7 +288,7 @@ export class IsPenEngine {
      * @param {path object} path 
      */
     _drawPath( canvas, path ) {
-        console.log( 'ispenengine._drawPath path', path );
+        // console.log( 'ispenengine._drawPath path', path );
         let ctx = canvas.getContext( '2d' );
         ctx.lineWidth = path.width;
         ctx.strokeStyle = path.color;

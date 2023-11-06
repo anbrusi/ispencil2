@@ -22,13 +22,13 @@ export default class IsCmdButton extends ButtonView {
         const bind = this.bindTemplate;
         this.bind('isOn').to(this._toolbar, 'activeCustomid', () => {
             const on = this._toolbar.activeCustomid == options.customid;
-            console.log( 'isOn', on );
+            // console.log( 'isOn', on );
             if ( on ) {
                 this.set('bkcolor', 'lime' );
             } else {
                 this.set('bkcolor', undefined );
             }
-            console.log( `bkcolor on ${ this._toolbar.activeCustomid } `, this.bkcolor );
+            // console.log( `bkcolor on ${ this._toolbar.activeCustomid } `, this.bkcolor );
             return on;
         } );
 
